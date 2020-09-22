@@ -1,0 +1,142 @@
+<html lang="en">    
+
+<title> Convert Excel File To JSON </title>
+
+<head>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        table {
+            /* display: flex; */
+            /* flex-direction: column; */
+            margin-bottom: 3rem;
+            border: 1px solid #383838;
+        }
+
+        tr {
+            /* display: flex; */
+            /* justify-content: center; */
+        }
+        td {
+            /* width: 10rem; */
+            padding: 0.1rem;
+            border: 1px solid #383838;
+        }
+        td.isHead {
+            padding: 1rem;
+            text-align: center;
+            background-color: rgb(0, 224, 67);
+            color: #fff;
+        }
+
+        .checked {
+            background-color: rgb(199, 90, 0);
+        }
+    </style>
+    <script src="js/jquery.js"> </script>
+    <script lang="javascript" src="js/xlsx.full.min.js"></script>
+
+    <script>
+
+        function checkRow(e) {
+            const row = this.parentNode.parentNode;
+            row.classList.toggle('checked');
+        }
+
+        function createDataTable(data) {
+            const container = document.getElementById('out');
+            const table = document.createElement('table');
+
+            data.forEach(row => {
+                const tableRow = document.createElement('tr');
+
+                if (Object.values(row).length > 3) {
+                    const firstTd = document.createElement('td');
+                    const check = document.createElement('input')
+                    check.setAttribute('type', 'checkbox');
+                    check.classList.add('j-check');
+
+                    check.addEventListener('click', checkRow);
+
+                    firstTd.appendChild(check);
+                    tableRow.appendChild(firstTd);
+
+                }
+
+                Object.values(row).forEach((cell, index, arr) => {
+                    const tableCell = document.createElement('td');
+                        
+                    if (index == 9) {
+                        console.log('i', cell)
+                        tableCell.textContent = cell.toString().replace(/ /g,'');
+                    } else {
+                        tableCell.textContent = cell;
+
+                    }
+                    console.log(arr.length)
+                    if (arr.length == 1) {
+                        tableCell.setAttribute('colspan', 13);
+                        tableCell.classList.add('isHead');
+
+                    }
+
+                    if (index > 3 && cell.toString().length > 20) {
+                        tableCell.textContent = cell.toString().replace(/ /g, '');
+                    }
+                    tableRow.appendChild(tableCell);
+                });
+
+                table.appendChild(tableRow);
+            })
+
+            container.appendChild(table);
+            console.log(data);
+        }
+
+        $(document).ready(function(){
+              $("#fileUploader").change(function(evt){
+                    var selectedFile = evt.target.files[0];
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                      var data = event.target.result;
+                      var workbook = XLSX.read(data, {
+                          type: 'binary'
+                      });
+                      workbook.SheetNames.forEach(function(sheetName) {
+                        
+                          var XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                          var json_object = JSON.stringify(XL_row_object);
+                          console.log(XL_row_object);
+
+                          createDataTable(XL_row_object)
+                        //   document.getElementById("jsonObject").innerHTML = json_object;
+
+                        })
+                    };
+
+                    reader.onerror = function(event) {
+                      console.error("File could not be read! Code " + event.target.error.code);
+                    };
+
+                    reader.readAsBinaryString(selectedFile);
+              });
+        });
+    </script>
+
+</head>
+
+<body>
+
+    <input type="file" id="fileUploader" name="fileUploader" accept=".xls, .xlsx"/>
+    </br></br>
+    <!-- <label id="jsonObject"> JSON : </label> -->
+    <div id="out">
+
+    </div>
+</body>
+
+
